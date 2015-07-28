@@ -1,4 +1,5 @@
 import random
+import sqlite3
 from create_team import Team
 from player_init import Coach
 from player_init import Player, Point_guard, Shooting_guard, Small_forward, Power_forward, Center
@@ -20,13 +21,13 @@ class League:
 		def get_coaches():
 			coaches = {}
 			draft_order = []
-			#initialize coach db here
 			number_of_coaches = (self.number_of_teams + 6) # make more coaches than needed
 			for item in range(number_of_coaches):
 				coach_name = random.choice(coach_first_names) + " " + random.choice(player_last_names)
+				while coach_name in coaches:
+					coach_name = random.choice(coach_first_names) + " " + random.choice(player_last_names) # don't want duplicate names
 				coaches[coach_name] = Coach(coach_name) # make the coach items
-				# stuff coach values into coach db here
-				# close connection to coach db
+
 			return coaches
 		
 
@@ -82,9 +83,11 @@ class League:
 			# initialize team db here
 			for item in range(self.number_of_teams):
 				coach = coach_pool.popitem()
-				#print len(team_name_pool)
 				choice = random.randrange(0, len(team_name_pool))
 				team_name = team_name_pool.pop(choice)
+				setattr(coach[1], 'team', team_name)
+				print coach[1].team
+				coach[1].update_coach()
 				league_teams[team_name] = Team(coach, team_name)
 			return league_teams
 
