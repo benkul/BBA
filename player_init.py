@@ -28,6 +28,7 @@ class Coach:
 		self.leadership = create_stat(leadership)
 		self.offense_playbook = offense_playbook[str(random.randint(1,3))]
 		self.defense_playbook = defense_playbook[str(random.randint(1,3))]
+		
 		def rating_boost(): # because every coach should be good at 1 thing in the very least
 			to_boost = random.randint(1,5)
 			if to_boost == 1:
@@ -44,22 +45,61 @@ class Coach:
 				return self.training
 			elif to_boost == 5:
 				major_bonus(self.leadership)
-
-
+	
 		def coach_rating():
 			total = self.motivation + self.coach_off_iq + self.coach_def_iq + self.training + self.leadership
 			rating = int(total / 4.5)
 			return rating
 
 		self.coach_rating = coach_rating()
+		
 
 
-		def add_to_coach_db(): # incomplete work, need code to create coach object and push to sqlite & return rowid for coach
-			coach_object = []		# this would need to be called after teams are created, or updated with team unique id
-			rowid = 1 				# since not all coaches will have a team, it makes sense to update the field after initializing the league
-			return rowid
+		def insert_coach(self): # puts the coach class object into the coach database table
+			connection = sqlite3.connect('league.db')
+			database = connection.cursor()
+			coach_attributes = (self.team, self.name, self.motivation, self.coach_off_iq, self.coach_def_iq, self.training, self.leadership, self.offense_playbook, self.defense_playbook, self.coach_rating)
+			database.execute('''INSERT INTO coach_db
+				(team_id, name, motivation, coach_off_iq, coach_def_iq, training,leadership, offense_playbook, defense_playbook, coach_rating) 
+				VALUES(?,?,?,?,?,?,?,?,?,?)''', coach_attributes)
+			connection.commit()
+			connection.close()
 
-		self.id = add_to_coach_db()	
+		insert_coach(self)
+
+		
+
+	def update_coach(self): # updates every coach field except for coach name
+		connection = sqlite3.connect('league.db')
+		database = connection.cursor()
+		coach_attributes = (self.team, self.motivation, self.coach_off_iq, self.coach_def_iq, self.training, self.leadership, self.offense_playbook, self.defense_playbook, self.coach_rating, self.name)
+		database.execute('''UPDATE coach_db 
+			SET team_id = ?, 
+			motivation = ?,
+			coach_off_iq = ?,
+			coach_def_iq = ?,
+			training = ?,
+			leadership = ?,
+			offense_playbook = ?,
+			defense_playbook = ?,
+			coach_rating = ?
+			WHERE 'name' = ?''', coach_attributes)
+		print "coach", self.name,  "updated"
+		connection.commit()
+		connection.close()
+
+
+
+
+
+
+
+
+
+		#  database table creation, just for reference
+		# 	def create_coach_db_table(): # one time only coach table initilization
+		# 		database.execute('''CREATE TABLE coach_db (id, team_id, name, motivation, coach_off_iq, coach_def_iq, training, 
+		# 		leadership, offense_playbook, defense_playbook, coach_rating)''')
 
 
 
