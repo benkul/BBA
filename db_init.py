@@ -16,31 +16,64 @@ def create_blank_db(): # just calls table creation functions
 	connection = sqlite3.connect('league.db')
 	database = connection.cursor()
 	print "opening database connection"
-	# one time only player table initialization
-	database.execute('''CREATE TABLE player_db (team_id, league_id, salary, name, age, potential, def_iq, off_iq, 
-		decision_making, court_awareness, strength, fatigue, stamina, shooting_touch, height, wingspan, vertical, 
-		speed, passing, dribbling, shot_layup, shot_close, shot_midrange, shot_three, shot_ft, steal, rebounding, 
+	database.execute('''CREATE TABLE league_table (Id integer primary key, name)''') 
+	# the name here is supplied by the user and required to load a saved game
+
+	
+	database.execute('''CREATE TABLE player_db (Id integer primary key,
+		league_id REFERENCES league_table(Id), 
+		team_id REFERENCES team_db(Id), 
+		salary, name, age, potential, def_iq, off_iq, decision_making, court_awareness, strength, fatigue, stamina, shooting_touch, 
+		height, wingspan, vertical, speed, passing, dribbling, shot_layup, shot_close, shot_midrange, shot_three, shot_ft, steal, rebounding, 
 		block, birthday, position)''')
-	# one time only team table initialization
-	database.execute('''CREATE TABLE team_db (coach_id, league_id, team_name, conference, home_court_advantage,
-		possessions, percentage_close, percentage_midrange, percentage_three, percentage_layup, PG_id, SG_id, 
-		SF_id, PF_id, CR_id, bench_1_id, bench_2_id, bench_3_id, bench_4_id, bench_5_id, bench_6_id, bench_7_id, 
-		bench_8_id, bench_9_id)''')
+	
+
+	database.execute('''CREATE TABLE team_db (Id, integer primary key, 
+		league_id REFERENCES league_table(Id), 
+		coach_id REFERENCES coach_db(Id), 
+		PG_id REFERENCES player_db(Id), 
+		SG_id REFERENCES player_db(Id), 
+		SF_id REFERENCES player_db(Id), 
+		PF_id REFERENCES player_db(Id),
+		CR_id REFERENCES player_db(Id),
+		bench_1_id REFERENCES player_db(Id),
+		bench_2_id REFERENCES player_db(Id),
+		bench_3_id REFERENCES player_db(Id),
+		bench_4_id REFERENCES player_db(Id),
+		bench_5_id REFERENCES player_db(Id),
+		bench_6_id REFERENCES player_db(Id),
+		bench_7_id REFERENCES player_db(Id),
+		bench_8_id REFERENCES player_db(Id),
+		bench_9_id REFERENCES player_db(Id),
+		team_name, conference, home_court_advantage,
+		possessions, percentage_close, percentage_midrange, percentage_three, percentage_layup)''')
 	# one time only coach table initilization
-	database.execute('''CREATE TABLE coach_db (Id integer primary key autoincrement, team_id, name, motivation, coach_off_iq, coach_def_iq, training, 
+	
+	database.execute('''CREATE TABLE coach_db (Id integer primary key, 
+		league_id REFERENCES league_table(Id), 
+		team_id REFERENCES team_db(Id), 
+		name, motivation, coach_off_iq, coach_def_iq, training, 
 		leadership, offense_playbook, defense_playbook, coach_rating)''')
 	# mostly only using this to load things back from save
 	
-	database.execute('''CREATE TABLE league_table (name, number_of_teams, season, teams)''') ## teams????
 
-	database.execute('''CREATE TABLE season_table (season_year, league_id)''') ## questions here, do we include games?
 
-	database.execute('''CREATE TABLE game_table (home_team_id, away_team_id, home_team_score, away_team_score, league_id, season_id)''') 
-	# eventually this should be expanded to include whole boxscore data
+	database.execute('''CREATE TABLE season_table (Id integer primary key, 
+		league_id REFERENCES league_table(Id), 
+		season_year)''')
 
-	database.execute('''CREATE TABLE budget_table(team_id, season_id, season_year, PG_id, SG_id, SF_id, 
-		PF_id, CR_id, bench_1_id, bench_2_id, bench_3_id, bench_4_id, bench_5_id, bench_6_id, bench_7_id, 
-		bench_8_id, bench_9_id)''') # eventually this should be expanded to include whole boxscore data
+	database.execute('''CREATE TABLE game_table (Id integer primary key, 
+		league_id REFERENCES league_table(Id), 
+		season_id REFERENCES season_table(Id),
+		home_team_id REFERENCES team_db(Id),
+		away_team_id REFERENCES team_db(Id),
+		home_team_score, away_team_score)''') 
+	# eventually this should be expanded to include whole boxscore data, references to player PK etc. 
+
+	database.execute('''CREATE TABLE budget_table(Id integer primary key, 
+		league_id REFERENCES league_table(Id),
+		team_id REFERENCES team_db(Id), 
+		season_id REFERENCES season_table(Id))''') ## big questions about how to handle player costs, etc
 	
 	print "database tables created"
 	connection.commit()
