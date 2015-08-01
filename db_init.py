@@ -26,6 +26,12 @@ def create_blank_db(): # just calls table creation functions
 		salary, name, age, potential, def_iq, off_iq, decision_making, court_awareness, strength, fatigue, stamina, shooting_touch, 
 		height, wingspan, vertical, speed, passing, dribbling, shot_layup, shot_close, shot_midrange, shot_three, shot_ft, steal, rebounding, 
 		block, birthday, position)''')
+
+	database.execute('''CREATE TABLE coach_db (Id integer primary key, 
+		league_id REFERENCES league_table(Id), 
+		team_id REFERENCES team_db(Id), 
+		name, motivation, coach_off_iq, coach_def_iq, training, 
+		leadership, offense_playbook, defense_playbook, coach_rating)''')
 	
 
 	database.execute('''CREATE TABLE team_db (Id, integer primary key, 
@@ -48,15 +54,6 @@ def create_blank_db(): # just calls table creation functions
 		team_name, conference, home_court_advantage,
 		possessions, percentage_close, percentage_midrange, percentage_three, percentage_layup)''')
 	# one time only coach table initilization
-	
-	database.execute('''CREATE TABLE coach_db (Id integer primary key, 
-		league_id REFERENCES league_table(Id), 
-		team_id REFERENCES team_db(Id), 
-		name, motivation, coach_off_iq, coach_def_iq, training, 
-		leadership, offense_playbook, defense_playbook, coach_rating)''')
-	# mostly only using this to load things back from save
-	
-
 
 	database.execute('''CREATE TABLE season_table (Id integer primary key, 
 		league_id REFERENCES league_table(Id), 
@@ -98,7 +95,7 @@ def dump_database():
 	connection.commit()
 	connection.close()
 	
-#dump_database()
+dump_database()
 
 #####
 # need set of functions to take created databases and build classes using the data from the tables
