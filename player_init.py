@@ -1,119 +1,66 @@
 import random
+import sqlite3
 from player_last_names import player_last_names
 from player_first_names import player_first_names
-import sqlite3
 from game_variables import age, potential, def_iq, off_iq, decision_making, court_awareness, strength, fatigue, stamina, shooting_touch, all_star_quality, height, wingspan, vertical, speed, passing, dribbling, shot_layup, shot_midrange, shot_close, shot_three, shot_ft, steal, block, major_bonus, minor_bonus, rebounding
-from game_variables import motivation, coach_off_iq, coach_def_iq, training, offense_playbook, defense_playbook, leadership
 from game_variables import all_star_threshold, all_star_bonus, all_star_stat_min, all_star_stat_max, number_of_teams
 from game_variables import team_name_options
-from coach_first_names import coach_first_names
 from create_team import Team
 from game_variables import budget
 
+def create_stat(stat): # assumes a min/max tuple as input 
+	min = stat[0]	   # helper function that aids in class object creation
+	max = stat[1]
+	selection = random.randrange(min, max)	
+	return selection
 
+def rating_to_letter_grade(rating): # helper function that converts number ratings to letter grades
+	if rating >= 95:
+		letter_grade = "A+"
+	elif rating <= 94 and rating >= 90: 
+		letter_grade = "A"
+	elif rating <=	89 and rating >= 85:
+		letter_grade = "A-"
+	elif rating <= 84 and rating >= 80:
+		letter_grade = "B+"
+	elif rating <= 79 and rating >= 75:
+		letter_grade = "B"
+	elif rating <= 74 and rating >= 70:
+		letter_grade = "B-"
+	elif rating <= 69 and rating >= 65:
+		letter_grade = "C+"
+	elif rating <= 64 and rating >= 60:
+		letter_grade = "C"
+	elif rating <= 59 and rating >= 55:
+		letter_grade = "C-"
+	elif rating <= 54 and rating >= 50:
+		letter_grade = "D+"
+	elif rating <= 49 and rating >= 45:
+		letter_grade = "D"
+	elif rating <= 44 and rating >= 40:
+		letter_grade = "D-"
+	elif rating <=39:
+		letter_grade = "F"
+	return letter_grade
 
-class Coach:
-	def __init__(self, coach_name):
-		def create_stat(stat): # assumes a min/max tuple as input 
-			min = stat[0]
-			max = stat[1]
-			selection = random.randrange(min, max)	
-			return selection
-		self.name = coach_name
-		self.team = ''
-		self.motivation = create_stat(motivation)
-		self.coach_off_iq = create_stat(coach_off_iq)
-		self.coach_def_iq = create_stat(coach_def_iq)
-		self.training = create_stat(training)
-		self.leadership = create_stat(leadership)
-		self.offense_playbook = offense_playbook[str(random.randint(1,3))]
-		self.defense_playbook = defense_playbook[str(random.randint(1,3))]
-		
-		def rating_boost(): # because every coach should be good at 1 thing in the very least
-			to_boost = random.randint(1,5)
-			if to_boost == 1:
-				major_bonus(self.motivation)
-				return self.motivation
-			elif to_boost == 2:
-				major_bonus(self.coach_off_iq)
-				return self.coach_off_iq
-			elif to_boost == 3:
-				major_bonus(self.coach_def_iq)
-				return self.coach_def_iq				
-			elif to_boost == 4:
-				major_bonus(self.training)
-				return self.training
-			elif to_boost == 5:
-				major_bonus(self.leadership)
-	
-		def coach_rating():
-			total = self.motivation + self.coach_off_iq + self.coach_def_iq + self.training + self.leadership
-			rating = int(total / 4.5)
-			return rating
+def cm_to_in(height):  # heights are stored in cm, this converst to feet/inches for ui output
+	in_high = height / 2.54
+	feet_high = int(in_high / 12)
+	remainder = int(in_high % 12)
+	feet_inches = str(feet_high) + "'" + str(remainder) + '"'
+	return feet_inches
 
-		self.coach_rating = coach_rating()
-		
-
-
-		def insert_coach(self): # puts the coach class object into the coach database table
-			connection = sqlite3.connect('league.db')
-			database = connection.cursor()
-			coach_attributes = (self.team, self.name, self.motivation, self.coach_off_iq, self.coach_def_iq, self.training, self.leadership, self.offense_playbook, self.defense_playbook, self.coach_rating)
-			database.execute('''INSERT INTO coach_db
-				(team_id, name, motivation, coach_off_iq, coach_def_iq, training,leadership, offense_playbook, defense_playbook, coach_rating) 
-				VALUES(?,?,?,?,?,?,?,?,?,?)''', coach_attributes)
-			connection.commit()
-			connection.close()
-
-		insert_coach(self)
-
-		
-
-	def update_coach(self): # updates every coach field except for coach name
-		connection = sqlite3.connect('league.db')
-		database = connection.cursor()
-		coach_attributes = (self.team, self.motivation, self.coach_off_iq, self.coach_def_iq, self.training, self.leadership, self.offense_playbook, self.defense_playbook, self.coach_rating, self.name)
-		database.execute('''UPDATE coach_db 
-			SET team_id = ?, 
-			motivation = ?,
-			coach_off_iq = ?,
-			coach_def_iq = ?,
-			training = ?,
-			leadership = ?,
-			offense_playbook = ?,
-			defense_playbook = ?,
-			coach_rating = ?
-			WHERE 'name' = ?''', coach_attributes)
-		print "coach", self.name,  "updated"
-		connection.commit()
-		connection.close()
-
-
-
-
-
-
-
-
-
-		#  database table creation, just for reference
-		# 	def create_coach_db_table(): # one time only coach table initilization
-		# 		database.execute('''CREATE TABLE coach_db (id, team_id, name, motivation, coach_off_iq, coach_def_iq, training, 
-		# 		leadership, offense_playbook, defense_playbook, coach_rating)''')
-
-
-
-
-
+# Player database table structure for future reference
+# database.execute('''CREATE TABLE player_db (Id integer primary key,
+# 	league_id REFERENCES league_table(Id), 
+# 	team_id REFERENCES team_db(Id), 
+# 	salary, name, age, potential, def_iq, off_iq, decision_making, court_awareness, strength, fatigue, stamina, shooting_touch, 
+# 	height, wingspan, vertical, speed, passing, dribbling, shot_layup, shot_close, shot_midrange, shot_three, shot_ft, steal, rebounding, 
+# 	block, birthday, position)''')
 
 class Player:
 	def __init__(self):
-		def create_stat(stat): # assumes a min/max tuple as input 
-			min = stat[0]
-			max = stat[1]
-			selection = random.randrange(min, max)	
-			return selection
-
+		self.league_id = 0
 		self.name = random.choice(player_first_names) + " " + random.choice(player_last_names)
 		self.age = create_stat(age)
 		self.potential = create_stat(potential)
@@ -144,6 +91,7 @@ class Player:
 		self.essentials = []
 		self.team = ''
 		self.salary = 1 # placeholder for league minimum, need transformation in player subclasses that creates salary based on player ability
+		self.position = ''
 		self.full_abilities = [
 			'court_awareness', 
 			'decision_making', 
@@ -279,6 +227,73 @@ class Player:
 		return self.full_abilities # not sure if the return here is necessary
 
 
+	def insert_player(self): # puts the coach class object into the coach database table
+		connection = sqlite3.connect('league.db')
+		database = connection.cursor()
+		player_attributes = (self.league_id, self.team, self.name, self.age, self.potential, self.def_iq, self.off_iq, 
+			self.decision_making, self.court_awareness, self.strength, self.fatigue, self.stamina, self.shooting_touch, 
+			self.height, self.wingspan, self.vertical, self.speed, self.passing, 
+			self.dribbling, self.shot_layup, self.shot_close, self.shot_midrange, self.shot_three, 
+			self.shot_ft, self.steal, self.rebounding, self.block, self.birthday, self.salary)
+
+		database.execute('''INSERT INTO player_db
+		(league_id, team_id, name, age, potential, def_iq, off_iq, decision_making, court_awareness, 
+			strength, fatigue, stamina, shooting_touch, height, wingspan, vertical, 
+			speed, passing, dribbling, shot_layup, shot_close, shot_midrange, shot_three, shot_ft, 
+			rebounding, block, birthday, salary, position)
+			VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', player_attributes)
+		connection.commit()
+		connection.close()
+
+	def update_player(self):
+		connection = sqlite3.connect('league.db')
+		database = connection.cursor()
+		player_attributes = (self.league_id, self.team, self.age, self.potential, self.def_iq, self.off_iq, 
+			self.decision_making, self.court_awareness, self.strength, self.fatigue, self.stamina, self.shooting_touch, 
+			self.all_star_quality, self.height, self.wingspan, self.vertical, self.speed, self.passing, 
+			self.dribbling, self.shot_layup, self.shot_close, self.shot_midrange, self.shot_three, 
+			self.shot_ft, self.steal, self.rebounding, self.block, self.birthday, self.salary, self.name)
+		database.execute('''UPDATE player_db 
+			SET league_id=?, 
+			team_id=?, 
+			age=?, 
+			potential=?, 
+			def_iq=?, 
+			off_iq=?, 
+			decision_making=?, 
+			court_awareness=?, 
+			strength=?, 
+			fatigue=?, 
+			stamina=?, 
+			shooting_touch=?, 
+			height=?, 
+			wingspan=?, 
+			vertial=?, 
+			speed=?, 
+			passing=?, 
+			dribbling=?, 
+			shot_layup=?, 
+			shot_close=?, 
+			shot_midrange=?, 
+			shot_three=?, 
+			shot_ft=?, 
+			rebounding=?, 
+			block=?, 
+			birthday=?, 
+			salary=?, 
+			position=?
+			WHERE 'name' = ?''', player_attributes)
+		print "player", self.name,  "updated"
+		connection.commit()
+		connection.close()
+
+# Player database table structure for future reference
+# database.execute('''CREATE TABLE player_db (Id integer primary key,
+# 	league_id REFERENCES league_table(Id), 
+# 	team_id REFERENCES team_db(Id), 
+# 	salary, name, age, potential, def_iq, off_iq, decision_making, court_awareness, strength, fatigue, stamina, shooting_touch, 
+# 	height, wingspan, vertical, speed, passing, dribbling, shot_layup, shot_close, shot_midrange, shot_three, shot_ft, steal, rebounding, 
+# 	block, birthday, position)''')
 
 class Point_guard(Player):
 	def __init__(self):		
@@ -296,6 +311,7 @@ class Point_guard(Player):
 			self.shot_layup += self.shooting_touch
 			self.shot_ft += self.shooting_touch
 			self.shot_three += self.shooting_touch
+			self.position = "PG"
 		self.essentials = [
 			'court_awareness', 
 			'decision_making', 
@@ -326,7 +342,7 @@ class Shooting_guard(Player):
 			self.shot_midrange += self.shooting_touch
 			self.shot_ft += self.shooting_touch
 			self.shot_three += self.shooting_touch			
-			self.position = "shooting guard"
+			self.position = "SG"
 		self.essentials = [
 			'off_iq', 
 			'decision_making', 
@@ -358,7 +374,7 @@ class Small_forward(Player):
 			self.shot_ft += self.shooting_touch
 			self.shot_three += self.shooting_touch
 			self.shot_midrange += self.shooting_touch			
-			self.position = "small forward"
+			self.position = "SF"
 		self.essentials = [
 			'court_awareness', 
 			'decision_making', 
@@ -389,7 +405,7 @@ class Power_forward(Player):
 			self.shot_layup += self.shooting_touch
 			self.shot_close += self.shooting_touch
 			self.shot_midrange += self.shooting_touch			
-			self.position = "power forward"
+			self.position = "PF"
 		self.essentials = [
 			'court_awareness', 
 			'decision_making', 
@@ -417,7 +433,7 @@ class Center(Player):
 			self.height += random.randrange(22 , 28)			
 			self.shot_layup += self.shooting_touch
 			self.shot_close += self.shooting_touch		
-			self.position = "power forward"
+			self.position = "C"
 		self.essentials = [
 			'court_awareness', 
 			'decision_making', 
@@ -436,41 +452,7 @@ class Center(Player):
 
 
 
-def rating_to_letter_grade(rating):
-	if rating >= 95:
-		letter_grade = "A+"
-	elif rating <= 94 and rating >= 90: 
-		letter_grade = "A"
-	elif rating <=	89 and rating >= 85:
-		letter_grade = "A-"
-	elif rating <= 84 and rating >= 80:
-		letter_grade = "B+"
-	elif rating <= 79 and rating >= 75:
-		letter_grade = "B"
-	elif rating <= 74 and rating >= 70:
-		letter_grade = "B-"
-	elif rating <= 69 and rating >= 65:
-		letter_grade = "C+"
-	elif rating <= 64 and rating >= 60:
-		letter_grade = "C"
-	elif rating <= 59 and rating >= 55:
-		letter_grade = "C-"
-	elif rating <= 54 and rating >= 50:
-		letter_grade = "D+"
-	elif rating <= 49 and rating >= 45:
-		letter_grade = "D"
-	elif rating <= 44 and rating >= 40:
-		letter_grade = "D-"
-	elif rating <=39:
-		letter_grade = "F"
-	return letter_grade
 
-def cm_to_in(height):
-	in_high = height / 2.54
-	feet_high = int(in_high / 12)
-	remainder = int(in_high % 12)
-	feet_inches = str(feet_high) + "'" + str(remainder) + '"'
-	return feet_inches
 
 
 
