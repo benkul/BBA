@@ -12,14 +12,15 @@ def create_stat(stat): # assumes a min/max tuple as input
 	return selection
 
 
-
+#################################################
 # Coach database structure for future reference
+#
 # database.execute('''CREATE TABLE coach_db (Id integer primary key, 
 # 	league_id REFERENCES league_table(Id), 
 # 	team_id REFERENCES team_db(Id), 
 # 	name, motivation, coach_off_iq, coach_def_iq, training, 
 # 	leadership, offense_playbook, defense_playbook, coach_rating)''')
-
+#################################################
 
 
 
@@ -96,14 +97,16 @@ class Coach:
 		insert_coach(self)
 
 		
-def load_coaches(league_pk, number_of_coaches):
+def load_coaches(league_pk):
 	connection = sqlite3.connect('league.db')
 	database = connection.cursor()
 	league_id = league_pk
 	coach_pool = []
 	database.execute('''SELECT league_id, team_id, name, motivation, coach_off_iq, coach_def_iq, training,leadership, offense_playbook, defense_playbook, coach_rating FROM coach_db WHERE league_id = ?''', league_id)
-	for coach in range(number_of_coaches):		
-		coach_attributes = database.fetchone()
+	#for coach in range(number_of_coaches):		
+	coach = 0
+	coach_attributes = database.fetchone()
+	while coach_attributes != None:
 		coach_pool.append(Coach())
 		print "attempting coach resurrection"
 		coach_pool[coach].league_id = coach_attributes[0]
@@ -118,4 +121,8 @@ def load_coaches(league_pk, number_of_coaches):
 		coach_pool[coach].defense_playbook = coach_attributes[9]
 		coach_pool[coach].coach_rating = coach_attributes[10]
 		print coach_pool[coach].name, " resurrected"
+		coach += 1
+		coach_attributes = database.fetchone()
+	connection.commit()		
+	connection.close()	
 	return coach_pool

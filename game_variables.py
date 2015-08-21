@@ -94,3 +94,4 @@ team_name_options = [
 # league variables
 number_of_teams 		= 12
 salary_cap 				= 100
+number_of_players		= (number_of_teams * 30)
