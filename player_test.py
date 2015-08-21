@@ -19,8 +19,8 @@ from league_init import League
 # This whole thing needs to be re-worked around current season schedule methodology 
 # Probably wait to refactor till after you've worked out the database calls. 
 ##
-from player_init import Coach, Player, Point_guard, Shooting_guard, Small_forward, Power_forward, Center, rating_to_letter_grade, cm_to_in
-
+from player_init import Player, Point_guard, Shooting_guard, Small_forward, Power_forward, Center, rating_to_letter_grade, cm_to_in
+from coach_init import Coach
 season_length = 60
 
 # create test objects
@@ -34,7 +34,7 @@ test_ce = Center()
 
 test_case = (test_pg, test_sg, test_sf, test_pf, test_ce)
 
-test_league = League()
+test_league = League('test_player')
 
 game_day = 1
 
@@ -66,7 +66,6 @@ def assert_types(player):
 	assert type(player.steal) is int
 	assert type(player.rebounding) is int
 	assert type(player.block) is int
-	assert type(player.essentials) is list
 
 def assert_position_creation():
 	print "================================================"
@@ -124,8 +123,9 @@ def test_player_game_growth(player):
 	#print player.essentials 
 	for game in range(season_length):
 		print "game ++++++++++++++++"
-		for rating in player.essentials:
-			player.player_game_growth(player.essentials)
+		essentials = player.player_get_essentials()
+		for rating in essentials:
+			player.player_game_growth()
 			print getattr(player, rating)
 	#print "end season essentials"
 	print"======================"	
