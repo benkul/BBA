@@ -2,11 +2,11 @@ import random
 import sqlite3
 from create_team import Team
 from coach_init import Coach, load_coaches
-from player_init import Player, Point_guard, Shooting_guard, Small_forward, Power_forward, Center
+from player_init import Player, load_players
 from player_init import cm_to_in, rating_to_letter_grade
 from coach_first_names import coach_first_names
 from player_last_names import player_last_names
-from game_variables import team_name_options, salary_cap, number_of_teams
+from game_variables import team_name_options, salary_cap, number_of_teams, number_of_players
 from schedule import return_schedule
 
 
@@ -46,68 +46,31 @@ class League:
 		print self.id, new_id[0]
 		connection.commit()
 		connection.close()
+		#########################
 		# database table creation for reference
+		#
 		# database.execute('''CREATE TABLE league_table (Id integer primary key, name)''') 
-
+		#########################
 
 	def get_coaches(self):
 		league_id = self.id
 		coaches = []
-		draft_order = []
 		number_of_coaches = (self.number_of_teams + 6) # make more coaches than needed
 		for item in range(number_of_coaches):
 			coaches.append(Coach())
 			coaches[item].create_coach(league_id)
 			coaches[item].update_coach()
-
 		return coaches
-	
 
-	def get_pg_pool(self):
-		pg_pool = []
-		all_players = {}
-		number_of_players = (self.number_of_teams * 5)
-		for item in range(number_of_players):
-			all_players[item] = Point_guard()
-			all_players[item].insert_player()
-			pg_pool.append((all_players[item].overall_rating, all_players[item]))
-		return pg_pool
 
-	def get_sg_pool(self):
-		sg_pool = []
-		all_players = {}
-		number_of_players = (self.number_of_teams * 5)
+	def get_player_pool(self):
+		all_players = []
 		for item in range(number_of_players):
-			all_players[item] = Shooting_guard()
-			sg_pool.append((all_players[item].overall_rating, all_players[item]))
-		return sg_pool		
-
-	def get_sf_pool(self):
-		sf_pool = []
-		all_players = {}			
-		number_of_players = (self.number_of_teams * 5)
-		for item in range(number_of_players):
-			all_players[item] = Small_forward()
-			sf_pool.append((all_players[item].overall_rating, all_players[item]))
-		return sf_pool
-
-	def get_pf_pool(self):
-		pf_pool = []
-		all_players = {}			
-		number_of_players = (self.number_of_teams * 5)
-		for item in range(number_of_players):
-			all_players[item] = Power_forward()
-			pf_pool.append((all_players[item].overall_rating, all_players[item]))
-		return pf_pool
-
-	def get_cr_pool(self):
-		cr_pool = []
-		all_players = {}			
-		number_of_players = (self.number_of_teams * 5)
-		for item in range(number_of_players):
-			all_players[item] = Center()
-			cr_pool.append((all_players[item].overall_rating, all_players[item]))
-		return cr_pool
+			all_players.append(Player(self.id))
+			all_players[item].player_set_position()
+			all_players[item].insert_player() # adds player to the db
+			all_players[item].set_db_id() # updates self.db_id from default to actual db pk for player
+		return all_players
 
 	def make_teams(self, coach_pool, team_name_pool):
 		#print team_name_pool
@@ -123,10 +86,10 @@ class League:
 			league_teams[team_name] = Team(coach, team_name)
 		return league_teams
 
-	def assign_to_conference(self, team_dict, number_of_teams):
+	def assign_to_conference(self, team_pool, number_of_teams):
 		team_list = []
-		for key in team_dict:
-			team_list.append(team_dict[key].team_name)
+		for item in team_pool:
+			team_list.append(team_pool[item].team_name)
 
 		#print team_list
 		eastern_conference = []
@@ -140,84 +103,36 @@ class League:
 		# update team dicts here to reference conferences
 		return conferences
 
-	def draft_players(self, pg_pool, sg_pool, sf_pool, pf_pool, cr_pool, team_dict):
-		pg_pool.sort()
-		sg_pool.sort()
-		sf_pool.sort()
-		pf_pool.sort()
-		cr_pool.sort()
-		for key in team_dict:
-			team_dict[key].players['PG'] = pg_pool[len(pg_pool)- 1][1]
-			pg_pool.pop()
-			#print "The", team_dict[key].team_name, "select", team_dict[key].players['PG'].name, team_dict[key].players['PG'].show_overall_rating()
-		for key in team_dict:
-			team_dict[key].players['SG'] = sg_pool[len(sg_pool) - 1][1]
-			sg_pool.pop()
-			#print "The", team_dict[key].team_name, "select", team_dict[key].players['SG'].name, team_dict[key].players['SG'].show_overall_rating()
-		for key in team_dict:
-			team_dict[key].players['SF'] = sf_pool[len(sf_pool) - 1][1]
-			sf_pool.pop()
-			#print "The", team_dict[key].team_name, "select", team_dict[key].players['SF'].name, team_dict[key].players['SF'].show_overall_rating()
-		for key in team_dict:
-			team_dict[key].players['PF'] = pf_pool[len(pf_pool) - 1][1]
-			pf_pool.pop()
-			#print "The", team_dict[key].team_name, "select", team_dict[key].players['PF'].name, team_dict[key].players['PF'].show_overall_rating()
-		for key in team_dict:
-			team_dict[key].players['CR'] = cr_pool[len(cr_pool) - 1][1]
-			cr_pool.pop()
-			#print "The", team_dict[key].team_name, "select", team_dict[key].players['CR'].name, team_dict[key].players['CR'].show_overall_rating()
-		rest_of_team = ['bench_1', 'bench_2', 'bench_3', 'bench_4', 'bench_5',
-						'bench_6', 'bench_7', 'bench_8', 'bench_9' ]
+	def draft_players(self, player_pool, team_pool):
+		players_to_draft = [
+		"PG", 
+		"SG", 
+		"SF",
+		"PF",
+		"C",
+		"bench_1",
+		"bench_2",
+		"bench_3",
+		"bench_4",
+		"bench_5",
+		"bench_6",
+		"bench_7",
+		"bench_8",
+		"bench_9"
+		]
+		for round in players_to_draft: # for each round in the draft
+			for team in team_pool: # go team by team
+				for player in player_pool: # check the player pool
+					if player.position == round or round[0] == 'b': # if they match the round, or the round starts with "bench"
+						# assign to team player dict
+						# remove from draft pool
+						team_pool[team].players[round] = player_pool.pop(player_pool.index(player))
+						team_pool[team].players[round].change_role(round) # update the players role for the team
+						print team_pool[team].team_name, " drafted ", player.name, " for position ", round
+						break
 
 
-		for item in rest_of_team:
-			for key in team_dict:
-				type_to_draft = random.randint(1,5)
 
-				if type_to_draft == 1:
-					if pg_pool != []:
-						team_dict[key].players[item] = pg_pool[len(pg_pool) -1][1]
-						pg_pool.pop()
-						#print "The", team_dict[key].team_name, "select", team_dict[key].players[item].name, team_dict[key].players[item].show_overall_rating(), team_dict[key].players[item].position
-					else:
-						type_to_draft += 1
-				elif type_to_draft == 2:
-					if sg_pool != []:
-
-						team_dict[key].players[item] = sg_pool[len(sg_pool) - 1][1]
-						sg_pool.pop()
-						#print "The", team_dict[key].team_name, "select", team_dict[key].players[item].name, team_dict[key].players[item].show_overall_rating(), team_dict[key].players[item].position						
-					else:
-						type_to_draft += 1
-				elif type_to_draft == 3:
-					if sf_pool != []:
-
-						team_dict[key].players[item] = sf_pool[len(sf_pool) - 1][1]
-						sf_pool.pop()
-						#print "The", team_dict[key].team_name, "select", team_dict[key].players[item].name, team_dict[key].players[item].show_overall_rating(), team_dict[key].players[item].position
-					else:
-						type_to_draft += 1
-				elif type_to_draft == 4:
-					if pf_pool != []:
-
-						team_dict[key].players[item] = pf_pool[len(pf_pool) - 1][1]
-						pf_pool.pop()							
-						#print "The", team_dict[key].team_name, "select", team_dict[key].players[item].name, team_dict[key].players[item].show_overall_rating(), team_dict[key].players[item].position
-					else:
-						type_to_draft += 1
-				elif type_to_draft == 5:
-					if cr_pool != []:
-						team_dict[key].players[item] = cr_pool[len(cr_pool) - 1][1]
-						cr_pool.pop()								
-						#print "The", team_dict[key].team_name, "select", team_dict[key].players[item].name, team_dict[key].players[item].show_overall_rating(), team_dict[key].players[item].position
-					else:
-						type_to_draft += 1
-				else:
-					team_dict[key].players[item] = pg_pool[len(pg_pool) -1][1]
-					pg_pool.pop()
-					#print "The", team_dict[key].team_name, "select", team_dict[key].players[item].name, team_dict[key].players[item].show_overall_rating(), team_dict[key].players[item].position
-					
-	
 
 
 
@@ -228,27 +143,19 @@ class League:
 	##############################
 	def create_league(self):
 		try: 
-			if self.team_dict: 
+			if self.team_pool: 
 				pass
 		except AttributeError:
 			print "league teams do not exist, creating now"
 			self.insert_league()
 			self.coach_pool = self.get_coaches()
-			self.pg_pool = self.get_pg_pool()
+			self.player_pool = self.get_player_pool()
 
-			self.sg_pool = self.get_sg_pool()
+			self.team_pool = self.make_teams(self.coach_pool, self.team_name_pool)
 
-			self.sf_pool = self.get_sf_pool()
+			self.conferences = self.assign_to_conference(self.team_pool, self.number_of_teams)
 
-			self.pf_pool = self.get_pf_pool()
-
-			self.cr_pool = self.get_cr_pool()
-
-			self.team_dict = self.make_teams(self.coach_pool, self.team_name_pool)
-
-			self.conferences = self.assign_to_conference(self.team_dict, self.number_of_teams)
-
-			self.draft_players(self.pg_pool, self.sg_pool, self.sf_pool, self.pf_pool, self.cr_pool, self.team_dict)
+			self.draft_players(self.player_pool, self.team_pool)
 
 			self.league_schedule = return_schedule(self.conferences['eastern'], self.conferences['western'])
 
@@ -267,13 +174,12 @@ class League:
 		print league_pk
 		database.execute('''SELECT COUNT(name) FROM coach_db WHERE league_id = ?''', league_pk)
 		coaches = database.fetchall()
-		number_of_coaches = coaches[0][0]
-		print number_of_coaches
-		coach_pool = load_coaches(league_pk, number_of_coaches) # get a list with the coach objects in it
+		coach_pool = load_coaches(league_pk) # get a list with the coach objects in it
+		player_pool = load_players(league_pk)
 
 
 
-new_or_old = str(raw_input('start a new game or load one? \n type new or load: '))
+new_or_old = str(raw_input('start a new game or load one? \ntype new or load: '))
 
 
 if new_or_old == 'new':
@@ -309,7 +215,7 @@ else:
 	test_league = League(league_name[0])
 	test_league.load_league(league_pk)
 
-# for item in self.team_dict:
+# for item in self.team_pool:
 # 	print item, "team schedule"
 # 	for line in self.league_schedule:
 # 		if item == line[0]:
