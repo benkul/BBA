@@ -25,7 +25,7 @@ def create_blank_db(): # just calls table creation functions
 		team_id REFERENCES team_db(Id), 
 		salary, name, age, potential, def_iq, off_iq, decision_making, court_awareness, strength, fatigue, stamina, shooting_touch, 
 		height, wingspan, vertical, speed, passing, dribbling, shot_layup, shot_close, shot_midrange, shot_three, shot_ft, steal, rebounding, 
-		block, birthday, position)''')
+		block, birthday, position, role)''')
 
 	database.execute('''CREATE TABLE coach_db (Id integer primary key, 
 		league_id REFERENCES league_table(Id), 
