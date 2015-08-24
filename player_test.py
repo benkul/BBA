@@ -6,10 +6,9 @@ from game_variables import age, potential, def_iq, off_iq, decision_making, cour
 from game_variables import motivation, coach_off_iq, coach_def_iq, training, offense_playbook, defense_playbook, leadership
 from game_variables import all_star_threshold, all_star_bonus, all_star_stat_min, all_star_stat_max, team_name_options
 from coach_first_names import coach_first_names
-from create_team import  Team
+from team_init import  Team
 from game_variables import budget
 from coach_first_names import coach_first_names
-from create_team import Team
 from player_init import rating_to_letter_grade
 from game_variables import budget, team_name_options
 from league_init import League

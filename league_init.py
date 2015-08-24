@@ -1,6 +1,6 @@
 import random
 import sqlite3
-from create_team import Team
+from team_init import Team
 from coach_init import Coach, load_coaches
 from player_init import Player, load_players
 from player_init import cm_to_in, rating_to_letter_grade
@@ -66,7 +66,7 @@ class League:
 	def get_player_pool(self):
 		all_players = []
 		for item in range(number_of_players):
-			all_players.append(Player(self.id))
+			all_players.append(Player(self.id)) # id is the league pk
 			all_players[item].player_set_position()
 			all_players[item].insert_player() # adds player to the db
 			all_players[item].set_db_id() # updates self.db_id from default to actual db pk for player
@@ -76,14 +76,17 @@ class League:
 		#print team_name_pool
 		league_teams = {}
 		# initialize team db here
+		league_id = self.id
 		for item in range(self.number_of_teams):
 			coach = coach_pool.pop()
 			choice = random.randrange(0, len(team_name_pool))
 			team_name = team_name_pool.pop(choice)
 			setattr(coach, 'team', team_name)
+			setattr()
 			print coach.team
 			coach.update_coach()
-			league_teams[team_name] = Team(coach, team_name)
+			print coach, team_name, league_id
+			league_teams[team_name] = Team(coach, team_name, league_id) # create the team class objects
 		return league_teams
 
 	def assign_to_conference(self, team_pool, number_of_teams):
@@ -130,6 +133,11 @@ class League:
 						team_pool[team].players[round].change_role(round) # update the players role for the team
 						print team_pool[team].team_name, " drafted ", player.name, " for position ", round
 						break
+		for team in team_pool:
+			#####
+			# need to be using the db id for each player, coach, etc if they're being referenced as pk in team db
+			# grab the id for each player and coach
+			####
 
 
 

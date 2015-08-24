@@ -91,7 +91,6 @@ class Coach:
 				VALUES(?,?,?,?,?,?,?,?,?,?,?)''', coach_attributes)
 			connection.commit()
 			connection.close()
-
 		rating_boost()
 		self.coach_rating = coach_rating()
 		insert_coach(self)

@@ -5,7 +5,7 @@ from player_first_names import player_first_names
 from game_variables import age, potential, def_iq, off_iq, decision_making, court_awareness, strength, fatigue, stamina, shooting_touch, all_star_quality, height, wingspan, vertical, speed, passing, dribbling, shot_layup, shot_midrange, shot_close, shot_three, shot_ft, steal, block, major_bonus, minor_bonus, rebounding
 from game_variables import all_star_threshold, all_star_bonus, all_star_stat_min, all_star_stat_max, number_of_teams
 from game_variables import team_name_options
-from create_team import Team
+from team_init import Team
 from game_variables import budget
 
 def create_stat(stat): # assumes a min/max tuple as input 
