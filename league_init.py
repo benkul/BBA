@@ -63,13 +63,13 @@ class League:
 		return coaches
 
 
-	def get_player_pool(self):
-		all_players = []
+	def get_new_player_pool(self):
+		all_players = {}
 		for item in range(number_of_players):
-			all_players.append(Player(self.id)) # id is the league pk
-			all_players[item].player_set_position()
-			all_players[item].insert_player() # adds player to the db
-			all_players[item].set_db_id() # updates self.db_id from default to actual db pk for player
+			new_player = Player(self.id) # id is the league pk
+			new_player.player_set_position()
+			new_player.insert_player()
+			all_players[new_player.db_id] = new_player
 		return all_players
 
 	def make_teams(self, coach_pool, team_name_pool):
@@ -82,7 +82,6 @@ class League:
 			choice = random.randrange(0, len(team_name_pool))
 			team_name = team_name_pool.pop(choice)
 			setattr(coach, 'team', team_name)
-			setattr()
 			print coach.team
 			coach.update_coach()
 			print coach, team_name, league_id
@@ -106,7 +105,13 @@ class League:
 		# update team dicts here to reference conferences
 		return conferences
 
-	def draft_players(self, player_pool, team_pool):
+	def draft_players(self, player_pk_pool, team_pool):
+		# TO DO: sort player pool by quality of player
+		temp_pool = []
+
+		for item in player_pk_pool:
+			temp_pool.append(item)
+
 		players_to_draft = [
 		"PG", 
 		"SG", 
@@ -125,19 +130,20 @@ class League:
 		]
 		for round in players_to_draft: # for each round in the draft
 			for team in team_pool: # go team by team
-				for player in player_pool: # check the player pool
-					if player.position == round or round[0] == 'b': # if they match the round, or the round starts with "bench"
+				for player_pk in temp_pool: # check the player pool
+					if self.player_pool[player_pk].position == round or round[0] == 'b': # if they match the round, or the round starts with "bench"
 						# assign to team player dict
 						# remove from draft pool
-						team_pool[team].players[round] = player_pool.pop(player_pool.index(player))
-						team_pool[team].players[round].change_role(round) # update the players role for the team
-						print team_pool[team].team_name, " drafted ", player.name, " for position ", round
+						team_pool[team].players[round] = temp_pool.pop(temp_pool.index(player_pk))
+						self.player_pool[player_pk].change_role(round) # update the players role for the team
+						print team_pool[team].team_name, " drafted ", self.player_pool[player_pk].name, " for position ", round
 						break
 		for team in team_pool:
 			#####
 			# need to be using the db id for each player, coach, etc if they're being referenced as pk in team db
 			# grab the id for each player and coach
 			####
+			pass
 
 
 
@@ -157,7 +163,7 @@ class League:
 			print "league teams do not exist, creating now"
 			self.insert_league()
 			self.coach_pool = self.get_coaches()
-			self.player_pool = self.get_player_pool()
+			self.player_pool = self.get_new_player_pool()
 
 			self.team_pool = self.make_teams(self.coach_pool, self.team_name_pool)
 
@@ -182,8 +188,8 @@ class League:
 		print league_pk
 		database.execute('''SELECT COUNT(name) FROM coach_db WHERE league_id = ?''', league_pk)
 		coaches = database.fetchall()
-		coach_pool = load_coaches(league_pk) # get a list with the coach objects in it
-		player_pool = load_players(league_pk)
+		self.coach_pool = load_coaches(league_pk) # get a list with the coach objects in it
+		self.player_pool = load_players(league_pk)
 
 
 

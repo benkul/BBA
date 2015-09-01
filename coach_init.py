@@ -32,7 +32,7 @@ class Coach:
 	def update_coach(self): # updates every coach field except for name
 		connection = sqlite3.connect('league.db')
 		database = connection.cursor()
-		coach_attributes = (self.league_id, self.team, self.motivation, self.coach_off_iq, self.coach_def_iq, self.training, self.leadership, self.offense_playbook, self.defense_playbook, self.coach_rating, self.name)
+		coach_attributes = (self.league_id, self.team, self.motivation, self.coach_off_iq, self.coach_def_iq, self.training, self.leadership, self.offense_playbook, self.defense_playbook, self.coach_rating, self.db_id)
 		database.execute('''UPDATE coach_db 
 			SET league_id = ?,
 			team_id = ?, 
@@ -44,7 +44,7 @@ class Coach:
 			offense_playbook = ?,
 			defense_playbook = ?,
 			coach_rating = ?
-			WHERE 'name' = ?''', coach_attributes)
+			WHERE 'Id' = ?''', coach_attributes)
 		print "coach", self.name,  "updated"
 		connection.commit()
 		connection.close()
@@ -90,6 +90,7 @@ class Coach:
 				(league_id, team_id, name, motivation, coach_off_iq, coach_def_iq, training,leadership, offense_playbook, defense_playbook, coach_rating) 
 				VALUES(?,?,?,?,?,?,?,?,?,?,?)''', coach_attributes)
 			connection.commit()
+			self.db_id = database.lastrowid
 			connection.close()
 		rating_boost()
 		self.coach_rating = coach_rating()
@@ -101,7 +102,7 @@ def load_coaches(league_pk):
 	database = connection.cursor()
 	league_id = league_pk
 	coach_pool = []
-	database.execute('''SELECT league_id, team_id, name, motivation, coach_off_iq, coach_def_iq, training,leadership, offense_playbook, defense_playbook, coach_rating FROM coach_db WHERE league_id = ?''', league_id)
+	database.execute('''SELECT league_id, team_id, name, motivation, coach_off_iq, coach_def_iq, training,leadership, offense_playbook, defense_playbook, coach_rating, Id FROM coach_db WHERE league_id = ?''', league_id)
 	#for coach in range(number_of_coaches):		
 	coach = 0
 	coach_attributes = database.fetchone()
@@ -119,6 +120,7 @@ def load_coaches(league_pk):
 		coach_pool[coach].offense_playbook = coach_attributes[8]
 		coach_pool[coach].defense_playbook = coach_attributes[9]
 		coach_pool[coach].coach_rating = coach_attributes[10]
+		coach_pool[coach].db_id = coach_attributes[11]
 		print coach_pool[coach].name, " resurrected"
 		coach += 1
 		coach_attributes = database.fetchone()

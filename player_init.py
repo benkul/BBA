@@ -129,17 +129,6 @@ class Player:
 		self.role = new_role
 		return self.role
 
-
-	def set_db_id(self):
-		connection = sqlite3.connect('league.db')
-		database = connection.cursor()
-		player_attributed = (int(self.league_id), str(self.name))
-		database.execute('''SELECT Id FROM player_db WHERE league_id = ? AND name = ?''', player_attributed)
-		id_number = database.fetchone()
-		self.db_id = id_number
-		connection.commit()
-		connection.close()
-
 	def show_rating(self):
 		total = 0
 		for rating in self.full_abilities:
@@ -241,6 +230,7 @@ class Player:
 			rebounding, block, birthday, salary, position, role)
 			VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', player_attributes)
 		connection.commit()
+		self.db_id = database.lastrowid
 		connection.close()
 
 	def update_player(self):
@@ -250,7 +240,7 @@ class Player:
 			self.decision_making, self.court_awareness, self.strength, self.fatigue, self.stamina, self.shooting_touch, 
 			self.height, self.wingspan, self.vertical, self.speed, self.passing, 
 			self.dribbling, self.shot_layup, self.shot_close, self.shot_midrange, self.shot_three, 
-			self.shot_ft, self.steal, self.rebounding, self.block, self.birthday, self.salary, self.position, self.role, self.name, self.league_id)
+			self.shot_ft, self.steal, self.rebounding, self.block, self.birthday, self.salary, self.position, self.role, self.db_id, self.league_id)
 		database.execute('''UPDATE player_db 
 			SET league_id=?, 
 			team_id=?, 
@@ -282,7 +272,7 @@ class Player:
 			salary=?, 
 			position=?
 			role=?
-			WHERE 'name' = ? AND 'league_id' = ? ''', player_attributes) # name isn't uniqe in db, but name is unique within league
+			WHERE 'Id' = ? AND 'league_id' = ? ''', player_attributes) # name isn't uniqe in db, but name is unique within league
 		print "player", self.name,  "updated"
 		connection.commit()
 		connection.close()
@@ -458,47 +448,47 @@ def load_players(league_id):
 	database.execute('''SELECT league_id, team_id, name, age, potential, def_iq, off_iq, decision_making, court_awareness, 
 			strength, fatigue, stamina, shooting_touch, height, wingspan, vertical, 
 			speed, passing, dribbling, shot_layup, shot_close, shot_midrange, shot_three, shot_ft, steal,
-			rebounding, block, birthday, salary, position, role FROM player_db WHERE league_id = ?''', league_id)	
+			rebounding, block, birthday, salary, position, role, Id FROM player_db WHERE league_id = ?''', league_id)	
 
-	player_pool = []
-	player = 0
+	player_pool = {}
 	player_attribute = database.fetchone()
 	while player_attribute != None:
-		player_pool.append(Player(league_id))
+		new_player = Player(league_id)
 		print "attempting player resurrection"
-		player_pool[player].league_id = player_attribute[0]
-		player_pool[player].team = player_attribute[1]
-		player_pool[player].name = player_attribute[2]
-		player_pool[player].age = player_attribute[3]
-		player_pool[player].potential = player_attribute[4]
-		player_pool[player].def_iq  = player_attribute[5]
-		player_pool[player].off_iq = player_attribute[6]
-		player_pool[player].decision_making = player_attribute[7]
-		player_pool[player].court_awareness = player_attribute[8]
-		player_pool[player].strength = player_attribute[9]
-		player_pool[player].fatigue = player_attribute[10]
-		player_pool[player].stamina = player_attribute[11]
-		player_pool[player].shooting_touch = player_attribute[12]
-		player_pool[player].height = player_attribute[13]
-		player_pool[player].wingspan = player_attribute[14]
-		player_pool[player].vertical = player_attribute[15]
-		player_pool[player].speed = player_attribute[16]
-		player_pool[player].passing = player_attribute[17]
-		player_pool[player].dribbling = player_attribute[18]
-		player_pool[player].shot_layup = player_attribute[19]
-		player_pool[player].shot_close = player_attribute[20]
-		player_pool[player].shot_midrange = player_attribute[21]
-		player_pool[player].shot_three = player_attribute[22]
-		player_pool[player].shot_ft = player_attribute[23]
-		player_pool[player].steal = player_attribute[24]
-		player_pool[player].rebounding = player_attribute[25]
-		player_pool[player].block = player_attribute[26]
-		player_pool[player].birthday = player_attribute[27]
-		player_pool[player].salary = player_attribute[28]
-		player_pool[player].position = player_attribute[29]
-		player_pool[player].position = player_attribute[30]
-		print player_pool[player].name, " resurrected"
-		player += 1
+		new_player.league_id = player_attribute[0]
+		new_player.team = player_attribute[1]
+		new_player.name = player_attribute[2]
+		new_player.age = player_attribute[3]
+		new_player.potential = player_attribute[4]
+		new_player.def_iq  = player_attribute[5]
+		new_player.off_iq = player_attribute[6]
+		new_player.decision_making = player_attribute[7]
+		new_player.court_awareness = player_attribute[8]
+		new_player.strength = player_attribute[9]
+		new_player.fatigue = player_attribute[10]
+		new_player.stamina = player_attribute[11]
+		new_player.shooting_touch = player_attribute[12]
+		new_player.height = player_attribute[13]
+		new_player.wingspan = player_attribute[14]
+		new_player.vertical = player_attribute[15]
+		new_player.speed = player_attribute[16]
+		new_player.passing = player_attribute[17]
+		new_player.dribbling = player_attribute[18]
+		new_player.shot_layup = player_attribute[19]
+		new_player.shot_close = player_attribute[20]
+		new_player.shot_midrange = player_attribute[21]
+		new_player.shot_three = player_attribute[22]
+		new_player.shot_ft = player_attribute[23]
+		new_player.steal = player_attribute[24]
+		new_player.rebounding = player_attribute[25]
+		new_player.block = player_attribute[26]
+		new_player.birthday = player_attribute[27]
+		new_player.salary = player_attribute[28]
+		new_player.position = player_attribute[29]
+		new_player.role = player_attribute[30]
+		new_player.db_id = player_attribute[31]
+		player_pool[new_player.db_id] = new_player
+		print new_player.name, " resurrected"
 		player_attribute = database.fetchone()
 	connection.commit()		
 	connection.close()	
